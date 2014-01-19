@@ -59,7 +59,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     chef.provisioning_path = "/etc/chef"
     chef.chef_server_url = "https://api.opscode.com/organizations/paychexenvironmentsteam"
     chef.validation_key_path = "~/.chef/paychexenvironmentsteam-validator.pem"
-    chef.node_name = "vm.development.ubnt.lap"
+    chef.node_name = "vagrant-oracle-vm-lnx"
     chef.validation_client_name = "paychexenvironmentsteam-validator"
     chef.client_key_path = "/etc/chef/paychexenvironmentsteam-validator.pem"
   end
