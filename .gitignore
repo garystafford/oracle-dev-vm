@@ -1,6 +1,7 @@
 # Third-party artifacts
 jdk-7u45-linux-x64.tar.gz
 wls_121200.jar
+oracle-xe-11.2.0-1.0.x86_64.rpm.zip
 *.box
 
 # Vagrant
