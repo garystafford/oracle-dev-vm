@@ -24,9 +24,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # within the machine from a port on the host machine. In the example below,
   # accessing "localhost:8080" will access port 80 on the guest machine.
   # config.vm.network :forwarded_port, guest: 80, host: 8080
-  config.vm.network :forwarded_port, guest: 22, host: 2229, auto_correct: true
+  config.vm.network :forwarded_port, guest: 22,   host: 2229, auto_correct: true
   config.vm.network :forwarded_port, guest: 7709, host: 7709, auto_correct: true
-  config.vm.hostname = "vm.development.lnx"
+  config.vm.network :forwarded_port, guest: 1521, host: 1521, auto_correct: true
+  config.vm.network :forwarded_port, guest: 8380, host: 8380, auto_correct: true
+  config.vm.hostname = "vm.development.ubnt.lap"
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -49,7 +51,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provider :virtualbox do |vb|
     vb.customize ["modifyvm", :id, "--memory", 1024]
-    vb.customize ["modifyvm", :id, "--name", "vagrant-oracle-vm-lnx"]
+    vb.customize ["modifyvm", :id, "--name",   "vagrant-oracle-vm-lnx"]
   end
 
   config.vm.provision :chef_client do |chef|
@@ -57,7 +59,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     chef.provisioning_path = "/etc/chef"
     chef.chef_server_url = "https://api.opscode.com/organizations/paychexenvironmentsteam"
     chef.validation_key_path = "~/.chef/paychexenvironmentsteam-validator.pem"
-    chef.node_name = "vagrant-oracle-vm-lnx"
+    chef.node_name = "vm.development.ubnt.lap"
     chef.validation_client_name = "paychexenvironmentsteam-validator"
     chef.client_key_path = "/etc/chef/paychexenvironmentsteam-validator.pem"
   end
