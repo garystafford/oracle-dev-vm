@@ -4,11 +4,11 @@ Vagrant Chef Oracle Project
 Vagrant Project to create an 64-bit Ubuntu Server-based Oracle/Java Development VM with all applications other than an IDE, to build and test Java EE projects.
 
 <h4>Major Components</h4>
-* Oracle JDK 1.7.0_45-b18 64-bit and all alternatives
+* Oracle JDK 1.7.0_45-b18 64-bit for Linux x86-64
 * Oracle-related Environment variables
 * WebLogic Server 12.1.2
 * (1) WLS domain / (1) WLS managed server
-* Oracle Database Express Edition 11g Release 2 (11.2) for Linux x86-64 (TBD)
+* Oracle Database Express Edition 11g Release 2 (11.2) for Linux x86-64
 
 <h4>Required Downloads to 'artifacts' folder within this repo</h4>
 * *[jdk-7u45-linux-x64.tar.gz] (http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html)*
