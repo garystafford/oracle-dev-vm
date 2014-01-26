@@ -1,72 +1,90 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
-VAGRANTFILE_API_VERSION = "2"
+# Multi-VM Configuration: WebLogic Application Server and Oracle Database Server
+# Author: Gary A. Stafford
+# Inspired from David Lutz's https://gist.github.com/dlutzy/2469037
+# Configures VMs based on Chef Server defined Environment and Node (vs. Roles)
 
+# node definitions
+nodes = [
+  { :name             =>  :apps,
+    :node             =>  'ApplicationServer',
+    :environment      =>  'Development',
+    :ip               =>  '192.168.33.10',
+    :host             =>  'app.server',
+    :ssh_port         =>  2201,
+    :wls_port         =>  7709,
+    :memory           =>  2048,
+    :shares           =>  true },
+  { :name             =>  :dbs,
+    :node             =>  'DatabaseServer',
+    :environment      =>  'Development',
+    :ip               =>  '192.168.33.21',
+    :host             =>  'db.server',
+    :ssh_port         =>  2202,
+    :xe_db_port       =>  1529,
+    :xe_listen_port   =>  8380,
+    :memory           =>  2048,
+    :shares           =>  true }
+  ]
+  
+default_ssh_port = 22
+VAGRANTFILE_API_VERSION = "2"
 Vagrant.require_plugin "vagrant-omnibus"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  # All Vagrant configuration is done here. The most common configuration
-  # options are documented and commented below. For a complete reference,
-  # please see the online documentation at vagrantup.com.
-
-  # Every Vagrant virtual environment requires a box to build off of.
   config.vm.box = "vagrant-oracle-vm-saucy64"
-
-  # The url from where the 'config.vm.box' box will be fetched if it
-  # doesn't already exist on the user's system.
   config.vm.box_url = "http://cloud-images.ubuntu.com/vagrant/saucy/current/saucy-server-cloudimg-amd64-vagrant-disk1.box"
   
   config.omnibus.chef_version = :latest
-    
-  # Create a forwarded port mapping which allows access to a specific port
-  # within the machine from a port on the host machine. In the example below,
-  # accessing "localhost:8080" will access port 80 on the guest machine.
-  # config.vm.network :forwarded_port, guest: 80, host: 8080
-
-  # Oracle WebLogic AdminServer port
-  config.vm.network :forwarded_port, guest: 7709, host: 7709, auto_correct: true
-
-  # Oracle Database XE Oracle Application Express
-  config.vm.network :forwarded_port, guest: 1529, host: 1529, auto_correct: true
-
-  # Oracle Database XE database listener port
-  config.vm.network :forwarded_port, guest: 8380, host: 8380, auto_correct: true
   
-  config.vm.hostname = "vm.development.win.lap"
+  nodes.each do |opts|
+    config.vm.define opts[:name] do |config|
+      # ssh port
+      #if opts[:ssh_port] then
+      #  config.vm.network :forwarded_port, guest: default_ssh_port, host: opts[:ssh_port]
+      #end
 
-  # Create a private network, which allows host-only access to the machine
-  # using a specific IP.
-  config.vm.network :private_network, ip: "192.168.33.10"
+      # Oracle WebLogic AdminServer port
+      if opts[:wls_port] then
+        config.vm.network :forwarded_port, guest: opts[:wls_port], host: opts[:wls_port]
+      end
 
-  # Create a public network, which generally matched to bridged network.
-  # Bridged networks make the machine appear as another physical device on
-  # your network.
-  # config.vm.network :public_network, ip: "192.168.1.71"
+      # Oracle Database XE Oracle Application Express
+      if opts[:xe_db_port] then
+        config.vm.network :forwarded_port, guest: opts[:xe_db_port], host: opts[:xe_db_port]
+      end
 
-  # If true, then any SSH connections made will enable agent forwarding.
-  # Default value: false
-  # config.ssh.forward_agent = true
+      # Oracle Database XE database listener port
+      if opts[:xe_listen_port] then
+        config.vm.network :forwarded_port, guest: opts[:xe_listen_port], host: opts[:xe_listen_port]
+      end
 
-  # Share an additional folder to the guest VM. The first argument is
-  # the path on the host to the actual folder. The second argument is
-  # the path on the guest to mount the folder. And the optional third
-  # argument is a set of non-required options.
-  config.vm.synced_folder "artifacts", "/artifacts"
+      config.vm.hostname = opts[:node]
 
-  config.vm.provider :virtualbox do |vb|
-    vb.customize ["modifyvm", :id, "--memory", 2048]
-    vb.customize ["modifyvm", :id, "--name", "vagrant-oracle-vm-win-lap"]
-  end
+      config.vm.network :private_network, ip: opts[:ip]
+      # config.vm.network :public_network, ip: opts[:ip]
 
-  config.vm.provision :chef_client do |chef|
-    chef.environment = "Development"
-    chef.provisioning_path = "/etc/chef"
-    chef.chef_server_url = "https://api.opscode.com/organizations/paychexenvironmentsteam"
-    chef.validation_key_path = "~/.chef/paychexenvironmentsteam-validator.pem"
-    chef.node_name = "vagrant-oracle-vm-win-lap"
-    chef.validation_client_name = "paychexenvironmentsteam-validator"
-    chef.client_key_path = "/etc/chef/paychexenvironmentsteam-validator.pem"
+      ## use nfs rather than VirtualBox shared files.  It's heaps faster. (not in use yet...)
+      # config.vm.share_folder  "stuff", "/usr/local/tmp", "${HOME}/GitHub/chef-artifacts", :nfs => true if opts[:shares]
+
+      config.vm.synced_folder "#{ENV['HOME']}/Documents/GitHub/chef-artifacts", "/artifacts"
+
+      config.vm.provider :virtualbox do |vb|
+        vb.customize ["modifyvm", :id, "--memory", opts[:memory]]
+        vb.customize ["modifyvm", :id, "--name", opts[:node]]
+      end
+
+      config.vm.provision :chef_client do |chef|
+        chef.environment = opts[:environment]
+        chef.provisioning_path = "/etc/chef"
+        chef.chef_server_url = "https://api.opscode.com/organizations/paychexenvironmentsteam"
+        chef.validation_key_path = "~/.chef/paychexenvironmentsteam-validator.pem"
+        chef.node_name = opts[:node]
+        chef.validation_client_name = "paychexenvironmentsteam-validator"
+        chef.client_key_path = "/etc/chef/paychexenvironmentsteam-validator.pem"
+      end
+    end
   end
 end
